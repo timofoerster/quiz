@@ -3,17 +3,23 @@ const http = require("http");
 const { Server } = require("socket.io");
 const QRCode = require("qrcode");
 const path = require("path");
+const fs = require("fs");
+const multer = require("multer");
+const XLSX = require("xlsx");
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
+
+const upload = multer({ dest: "uploads/" });
+const DATA_FILE = path.join(__dirname, "questions.json");
 
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 
 // Game state
 let gameState = {
-  phase: "lobby", // lobby, question, results, leaderboard, podium
+  phase: "lobby",
   questions: [],
   currentQuestionIndex: -1,
   players: {},
@@ -21,6 +27,18 @@ let gameState = {
   timerSeconds: 20,
   questionStartTime: null
 };
+
+// Load saved questions on startup
+try {
+  if (fs.existsSync(DATA_FILE)) {
+    const saved = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+    gameState.questions = saved.questions || [];
+    gameState.timerSeconds = saved.timerSeconds || 20;
+    console.log("Loaded " + gameState.questions.length + " saved questions");
+  }
+} catch (e) {
+  console.log("No saved questions found");
+}
 
 const MAX_POINTS = 1000;
 const MIN_POINTS = 500;
@@ -38,11 +56,80 @@ app.get("/api/qr", async (req, res) => {
   }
 });
 
-// API: set questions
+// API: set questions (and save to file)
 app.post("/api/questions", (req, res) => {
   gameState.questions = req.body.questions || [];
   gameState.timerSeconds = req.body.timerSeconds || 20;
+  // Save to file
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify({
+      questions: gameState.questions,
+      timerSeconds: gameState.timerSeconds
+    }, null, 2));
+  } catch (e) {
+    console.error("Failed to save questions:", e);
+  }
   res.json({ ok: true, count: gameState.questions.length });
+});
+
+// API: get saved questions
+app.get("/api/questions", (req, res) => {
+  res.json({
+    questions: gameState.questions,
+    timerSeconds: gameState.timerSeconds
+  });
+});
+
+// API: upload Excel
+app.post("/api/upload", upload.single("file"), (req, res) => {
+  try {
+    const workbook = XLSX.readFile(req.file.path);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+    const questions = [];
+    const correctMap = { "A": 0, "B": 1, "C": 2, "D": 3, "a": 0, "b": 1, "c": 2, "d": 3 };
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || !row[1]) continue;
+      const text = String(row[1]).trim();
+      const options = [
+        String(row[2] || "").trim(),
+        String(row[3] || "").trim(),
+        String(row[4] || "").trim(),
+        String(row[5] || "").trim()
+      ];
+      const correctLetter = String(row[6] || "").trim().toUpperCase();
+      const correct = correctMap[correctLetter];
+
+      if (text && options.every(o => o) && correct !== undefined) {
+        questions.push({ text, options, correct });
+      }
+    }
+
+    // Clean up uploaded file
+    fs.unlinkSync(req.file.path);
+
+    if (questions.length === 0) {
+      return res.status(400).json({ error: "Keine gültigen Fragen gefunden" });
+    }
+
+    gameState.questions = questions;
+    // Save to file
+    try {
+      fs.writeFileSync(DATA_FILE, JSON.stringify({
+        questions: gameState.questions,
+        timerSeconds: gameState.timerSeconds
+      }, null, 2));
+    } catch (e) {
+      console.error("Failed to save questions:", e);
+    }
+
+    res.json({ ok: true, count: questions.length, questions });
+  } catch (e) {
+    res.status(500).json({ error: "Fehler beim Lesen der Datei: " + e.message });
+  }
 });
 
 // API: get game state
@@ -57,7 +144,6 @@ app.get("/api/state", (req, res) => {
 
 io.on("connection", (socket) => {
 
-  // Player joins
   socket.on("join", (name) => {
     const trimmed = (name || "").trim().substring(0, 20);
     if (!trimmed) return;
@@ -71,14 +157,15 @@ io.on("connection", (socket) => {
     io.to("host").emit("playerUpdate", getPlayerList());
   });
 
-  // Host joins
   socket.on("hostJoin", () => {
     socket.join("host");
     socket.emit("playerUpdate", getPlayerList());
     socket.emit("phaseUpdate", { phase: gameState.phase });
+    if (gameState.questions.length > 0) {
+      socket.emit("questionsLoaded", { count: gameState.questions.length });
+    }
   });
 
-  // Host starts next question
   socket.on("nextQuestion", () => {
     gameState.currentQuestionIndex++;
     if (gameState.currentQuestionIndex >= gameState.questions.length) {
@@ -104,7 +191,6 @@ io.on("connection", (socket) => {
     io.to("host").emit("question", { ...questionData, correct: q.correct });
     io.to("players").emit("question", questionData);
 
-    // Timer
     setTimeout(() => {
       if (gameState.phase === "question" &&
           gameState.currentQuestionIndex === questionData.index) {
@@ -113,7 +199,6 @@ io.on("connection", (socket) => {
     }, gameState.timerSeconds * 1000);
   });
 
-  // Host shows leaderboard
   socket.on("showLeaderboard", () => {
     gameState.phase = "leaderboard";
     const lb = getLeaderboard();
@@ -121,10 +206,9 @@ io.on("connection", (socket) => {
     io.to("players").emit("leaderboardPlayer", lb);
   });
 
-  // Player submits answer
   socket.on("answer", (data) => {
     if (gameState.phase !== "question") return;
-    if (gameState.answers[socket.id]) return; // already answered
+    if (gameState.answers[socket.id]) return;
     if (!gameState.players[socket.id]) return;
 
     const elapsed = (Date.now() - gameState.questionStartTime) / 1000;
@@ -155,18 +239,15 @@ io.on("connection", (socket) => {
 
     socket.emit("answerResult", { correct: isCorrect, points: points });
 
-    // Notify host of answer count
     const answerCount = Object.keys(gameState.answers).length;
     const playerCount = Object.keys(gameState.players).length;
     io.to("host").emit("answerCount", { count: answerCount, total: playerCount });
 
-    // Auto-end if everyone answered
     if (answerCount >= playerCount) {
       endQuestion();
     }
   });
 
-  // Host resets game
   socket.on("resetGame", () => {
     gameState.phase = "lobby";
     gameState.currentQuestionIndex = -1;
@@ -200,7 +281,6 @@ function endQuestion() {
     stats: {}
   };
 
-  // Count answers per option
   q.options.forEach((opt, i) => { results.stats[i] = 0; });
   for (const id in gameState.answers) {
     const a = gameState.answers[id];

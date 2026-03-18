@@ -9,7 +9,6 @@
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
   body { font-family: 'Inter', sans-serif; background: #0f0f23; color: #fff; min-height: 100vh; overflow-x: hidden; }
   
-  /* Lobby */
   #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; }
   #lobby h1 { font-size: 3rem; font-weight: 900; margin-bottom: 0.5rem; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   #lobby .subtitle { color: #aaa; font-size: 1.1rem; margin-bottom: 2rem; }
@@ -19,27 +18,39 @@
   .player-count { font-size: 1.3rem; color: #ccc; margin-bottom: 1rem; }
   .player-list { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; max-width: 600px; margin-bottom: 2rem; }
   .player-chip { background: #1a1a3e; border: 1px solid #333; border-radius: 2rem; padding: 0.4rem 1rem; font-size: 0.9rem; }
+  .questions-status { font-size: 1.1rem; margin-bottom: 1.5rem; padding: 0.8rem 1.5rem; border-radius: 0.7rem; }
+  .questions-status.loaded { background: rgba(56,239,125,0.15); color: #38ef7d; }
+  .questions-status.empty { background: rgba(231,76,60,0.15); color: #e74c3c; }
   
-  /* Setup */
   #setup { display: none; max-width: 700px; margin: 0 auto; padding: 2rem; }
   #setup h2 { font-size: 2rem; margin-bottom: 1.5rem; text-align: center; }
+  
+  .upload-box { background: #1a1a3e; border: 2px dashed #667eea; border-radius: 1rem; padding: 2rem; text-align: center; margin-bottom: 2rem; }
+  .upload-box h3 { color: #667eea; margin-bottom: 0.5rem; }
+  .upload-box p { color: #888; margin-bottom: 1rem; font-size: 0.9rem; }
+  .upload-box input[type="file"] { display: none; }
+  .upload-label { display: inline-block; padding: 0.8rem 2rem; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border-radius: 0.7rem; font-weight: 700; cursor: pointer; transition: transform 0.1s; }
+  .upload-label:hover { transform: scale(1.05); }
+  .upload-result { margin-top: 1rem; font-size: 0.95rem; }
+  .upload-result.success { color: #38ef7d; }
+  .upload-result.error { color: #e74c3c; }
+  .divider { text-align: center; color: #555; margin: 1.5rem 0; font-size: 0.9rem; }
+  .divider span { background: #0f0f23; padding: 0 1rem; }
+  
   .question-form { background: #1a1a3e; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem; }
   .question-form label { display: block; font-weight: 600; margin-bottom: 0.3rem; color: #ccc; font-size: 0.9rem; }
   .question-form input, .question-form select { width: 100%; padding: 0.6rem; border-radius: 0.5rem; border: 1px solid #444; background: #0f0f23; color: #fff; font-size: 1rem; margin-bottom: 0.8rem; }
   .question-form .q-num { font-weight: 700; color: #667eea; font-size: 1.1rem; margin-bottom: 0.8rem; }
   .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
   
-  /* Buttons */
   .btn { padding: 0.8rem 2rem; border: none; border-radius: 0.7rem; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: transform 0.1s; }
   .btn:hover { transform: scale(1.05); }
   .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
   .btn-green { background: linear-gradient(135deg, #11998e, #38ef7d); color: #000; }
   .btn-orange { background: linear-gradient(135deg, #f7971e, #ffd200); color: #000; }
   .btn-red { background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff; }
-  .btn-small { padding: 0.5rem 1rem; font-size: 0.9rem; }
   .btn-row { display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; flex-wrap: wrap; }
   
-  /* Question display */
   #questionView { display: none; min-height: 100vh; padding: 2rem; text-align: center; }
   .q-header { font-size: 1.2rem; color: #888; margin-bottom: 1rem; }
   .q-text { font-size: 2.2rem; font-weight: 700; margin-bottom: 2rem; line-height: 1.3; }
@@ -56,13 +67,6 @@
   .timer-text { font-size: 3rem; font-weight: 900; color: #667eea; margin-bottom: 1rem; }
   .answer-count { font-size: 1.1rem; color: #888; margin-top: 1rem; }
   
-  /* Results */
-  #resultsView { display: none; }
-  .results-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 800px; margin: 0 auto 2rem; }
-  .stat-bar { background: #1a1a3e; border-radius: 1rem; padding: 1rem; text-align: center; }
-  .stat-bar .count { font-size: 2rem; font-weight: 700; }
-  
-  /* Leaderboard */
   #leaderboardView { display: none; min-height: 100vh; padding: 2rem; }
   .lb-title { text-align: center; font-size: 2.5rem; font-weight: 900; margin-bottom: 2rem; background: linear-gradient(135deg, #f7971e, #ffd200); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   .lb-list { max-width: 600px; margin: 0 auto; }
@@ -78,7 +82,6 @@
   .lb-time.time-correct { color: #38ef7d; }
   .lb-time.time-wrong { color: #e74c3c; }
   
-  /* Podium */
   #podiumView { display: none; min-height: 100vh; padding: 2rem; text-align: center; }
   .podium-title { font-size: 3rem; font-weight: 900; margin-bottom: 3rem; background: linear-gradient(135deg, #ffd200, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   .podium { display: flex; align-items: flex-end; justify-content: center; gap: 1rem; margin-bottom: 3rem; }
@@ -93,23 +96,33 @@
 </head>
 <body>
 
-<!-- LOBBY -->
 <div id="lobby">
   <h1>Live Quiz</h1>
   <p class="subtitle">Teilnehmende verbinden sich per QR-Code oder Link</p>
   <div class="qr-box"><img id="qrImg" src="" alt="QR Code"></div>
   <div class="join-url" id="joinUrl"></div>
+  <div class="questions-status empty" id="questionsStatus">Keine Fragen geladen</div>
   <div class="player-count"><span id="playerCount">0</span> Teilnehmende</div>
   <div class="player-list" id="playerList"></div>
   <div class="btn-row">
-    <button class="btn btn-primary" onclick="showSetup()">Fragen eingeben</button>
+    <button class="btn btn-primary" onclick="showSetup()">Fragen eingeben / hochladen</button>
     <button class="btn btn-green" id="startBtn" onclick="startGame()" style="display:none">Quiz starten</button>
   </div>
 </div>
 
-<!-- SETUP -->
 <div id="setup">
-  <h2>Fragen eingeben</h2>
+  <h2>Fragen laden</h2>
+  
+  <div class="upload-box">
+    <h3>Excel-Datei hochladen</h3>
+    <p>Lade die ausgefuellte Excel-Vorlage hoch (mit Spalten: Nr, Frage, A, B, C, D, Richtige Antwort)</p>
+    <label class="upload-label" for="excelFile">Excel-Datei auswaehlen</label>
+    <input type="file" id="excelFile" accept=".xlsx,.xls" onchange="uploadExcel()">
+    <div class="upload-result" id="uploadResult"></div>
+  </div>
+  
+  <div class="divider"><span>oder manuell eingeben</span></div>
+  
   <div style="text-align:center; margin-bottom:1rem;">
     <label style="color:#ccc;">Anzahl Fragen: <select id="qCount" onchange="buildForms()">
       <option>3</option><option>5</option><option>8</option><option>10</option><option selected>12</option><option>15</option><option>20</option>
@@ -120,12 +133,11 @@
   </div>
   <div id="questionForms"></div>
   <div class="btn-row">
-    <button class="btn btn-primary" onclick="saveQuestions()">Fragen speichern</button>
-    <button class="btn btn-orange" onclick="hideSetup()">Abbrechen</button>
+    <button class="btn btn-primary" onclick="saveQuestions()">Manuell speichern</button>
+    <button class="btn btn-orange" onclick="hideSetup()">Zurueck</button>
   </div>
 </div>
 
-<!-- QUESTION -->
 <div id="questionView">
   <div class="q-header" id="qHeader"></div>
   <div class="timer-text" id="timerText"></div>
@@ -135,10 +147,8 @@
   <div class="answer-count" id="answerCount"></div>
 </div>
 
-<!-- RESULTS (overlays on questionView) -->
 <div id="resultsView"></div>
 
-<!-- LEADERBOARD -->
 <div id="leaderboardView">
   <div class="lb-title">Leaderboard</div>
   <div class="lb-list" id="lbList"></div>
@@ -147,7 +157,6 @@
   </div>
 </div>
 
-<!-- PODIUM -->
 <div id="podiumView">
   <div class="podium-title">Endergebnis</div>
   <div class="podium" id="podium"></div>
@@ -166,11 +175,29 @@ let timerSeconds = 20;
 
 socket.emit("hostJoin");
 
-// Load QR
 fetch("/api/qr").then(r=>r.json()).then(d=>{
   document.getElementById("qrImg").src = d.qr;
   document.getElementById("joinUrl").textContent = d.url;
 });
+
+// Check for saved questions on load
+fetch("/api/questions").then(r=>r.json()).then(d=>{
+  if (d.questions && d.questions.length > 0) {
+    updateQuestionsStatus(d.questions.length);
+    document.getElementById("startBtn").style.display = "inline-block";
+  }
+});
+
+socket.on("questionsLoaded", (data) => {
+  updateQuestionsStatus(data.count);
+  document.getElementById("startBtn").style.display = "inline-block";
+});
+
+function updateQuestionsStatus(count) {
+  const el = document.getElementById("questionsStatus");
+  el.textContent = count + " Fragen geladen";
+  el.className = "questions-status loaded";
+}
 
 socket.on("playerUpdate", (players) => {
   document.getElementById("playerCount").textContent = players.length;
@@ -191,7 +218,6 @@ socket.on("question", (data) => {
   const opts = document.getElementById("qOptions");
   opts.innerHTML = data.options.map((o,i) => '<div class="q-option opt-'+i+'">'+o+'</div>').join("");
   
-  // Timer
   let remaining = timerSeconds;
   document.getElementById("timerText").textContent = remaining;
   document.getElementById("timerFill").style.width = "100%";
@@ -210,13 +236,11 @@ socket.on("answerCount", (data) => {
 
 socket.on("results", (data) => {
   clearInterval(timerInterval);
-  // Highlight correct/wrong
   const opts = document.querySelectorAll(".q-option");
   opts.forEach((el, i) => {
     if (i === data.correct) el.classList.add("correct");
     else el.classList.add("wrong");
   });
-  // Show leaderboard button
   setTimeout(() => {
     socket.emit("showLeaderboard");
   }, 3000);
@@ -251,7 +275,7 @@ socket.on("podium", (lb) => {
   view.style.display = "block";
   
   const podium = document.getElementById("podium");
-  const emojis = ["🥇", "🥈", "🥉"];
+  const emojis = ["\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49"];
   podium.innerHTML = lb.slice(0, 3).map((p, i) => 
     '<div class="podium-place p'+(i+1)+'"><div class="podium-emoji">'+emojis[i]+'</div><div class="podium-name">'+p.name+'</div><div class="podium-score">'+p.score+' Punkte</div></div>'
   ).join("");
@@ -276,6 +300,37 @@ function showSetup() {
 
 function hideSetup() {
   document.getElementById("setup").style.display = "none";
+}
+
+function uploadExcel() {
+  const file = document.getElementById("excelFile").files[0];
+  if (!file) return;
+  
+  const formData = new FormData();
+  formData.append("file", file);
+  
+  const result = document.getElementById("uploadResult");
+  result.textContent = "Wird hochgeladen...";
+  result.className = "upload-result";
+  
+  fetch("/api/upload", { method: "POST", body: formData })
+    .then(r => r.json())
+    .then(d => {
+      if (d.error) {
+        result.textContent = "Fehler: " + d.error;
+        result.className = "upload-result error";
+      } else {
+        result.textContent = d.count + " Fragen erfolgreich geladen!";
+        result.className = "upload-result success";
+        updateQuestionsStatus(d.count);
+        document.getElementById("startBtn").style.display = "inline-block";
+        setTimeout(() => { hideSetup(); }, 1500);
+      }
+    })
+    .catch(e => {
+      result.textContent = "Upload fehlgeschlagen: " + e.message;
+      result.className = "upload-result error";
+    });
 }
 
 function buildForms() {
@@ -322,19 +377,14 @@ function saveQuestions() {
     body: JSON.stringify({ questions, timerSeconds: timer })
   }).then(r => r.json()).then(d => {
     alert(d.count + " Fragen gespeichert!");
+    updateQuestionsStatus(d.count);
     hideSetup();
     document.getElementById("startBtn").style.display = "inline-block";
   });
 }
 
-function startGame() {
-  nextQuestion();
-}
-
-function nextQuestion() {
-  socket.emit("nextQuestion");
-}
-
+function startGame() { nextQuestion(); }
+function nextQuestion() { socket.emit("nextQuestion"); }
 function resetGame() {
   socket.emit("resetGame");
   hideAll();
