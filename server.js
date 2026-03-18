@@ -222,7 +222,16 @@ function getPlayerList() {
 
 function getLeaderboard() {
   return Object.values(gameState.players)
-    .map(p => ({ name: p.name, score: p.score }))
+    .map(p => {
+      const lastAnswer = p.answers.length > 0 ? p.answers[p.answers.length - 1] : null;
+      return {
+        name: p.name,
+        score: p.score,
+        lastTime: lastAnswer ? lastAnswer.time : null,
+        lastCorrect: lastAnswer ? lastAnswer.correct : null,
+        lastPoints: lastAnswer ? lastAnswer.points : 0
+      };
+    })
     .sort((a, b) => b.score - a.score);
 }
 
