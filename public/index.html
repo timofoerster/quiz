@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Quiz mitmachen</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #0f0f23; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; }
+  
+  /* Join */
+  #joinScreen { text-align: center; width: 100%; max-width: 400px; }
+  #joinScreen h1 { font-size: 2rem; font-weight: 900; margin-bottom: 0.5rem; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  #joinScreen p { color: #aaa; margin-bottom: 2rem; }
+  #joinScreen input { width: 100%; padding: 1rem; font-size: 1.2rem; border-radius: 1rem; border: 2px solid #333; background: #1a1a3e; color: #fff; text-align: center; margin-bottom: 1rem; }
+  #joinScreen input:focus { border-color: #667eea; outline: none; }
+  
+  .btn { padding: 1rem 2rem; border: none; border-radius: 1rem; font-size: 1.2rem; font-weight: 700; cursor: pointer; width: 100%; max-width: 400px; transition: transform 0.1s; }
+  .btn:active { transform: scale(0.95); }
+  .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+  
+  /* Waiting */
+  #waitScreen { display: none; text-align: center; }
+  #waitScreen h2 { font-size: 1.8rem; margin-bottom: 1rem; }
+  .welcome-name { color: #667eea; font-weight: 700; }
+  .pulse { animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .wait-text { color: #888; font-size: 1.1rem; }
+  
+  /* Question */
+  #questionScreen { display: none; width: 100%; max-width: 500px; text-align: center; }
+  .q-info { color: #888; font-size: 0.9rem; margin-bottom: 0.5rem; }
+  .q-timer { font-size: 2.5rem; font-weight: 900; color: #667eea; margin-bottom: 0.5rem; }
+  .q-question { font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem; line-height: 1.4; }
+  .answer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+  .answer-btn { padding: 1.2rem; border: none; border-radius: 1rem; font-size: 1.1rem; font-weight: 700; color: #fff; cursor: pointer; transition: transform 0.1s, opacity 0.2s; }
+  .answer-btn:active { transform: scale(0.95); }
+  .answer-btn.opt-0 { background: #e21b3c; }
+  .answer-btn.opt-1 { background: #1368ce; }
+  .answer-btn.opt-2 { background: #d89e00; }
+  .answer-btn.opt-3 { background: #26890c; }
+  .answer-btn.selected { border: 4px solid #fff; }
+  .answer-btn.disabled { pointer-events: none; opacity: 0.5; }
+  
+  /* Feedback */
+  #feedbackScreen { display: none; text-align: center; }
+  .feedback-icon { font-size: 5rem; margin-bottom: 1rem; }
+  .feedback-text { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .feedback-points { font-size: 1.2rem; color: #38ef7d; }
+  .feedback-wrong { color: #e74c3c; }
+  
+  /* Leaderboard player */
+  #lbScreen { display: none; text-align: center; width: 100%; max-width: 400px; }
+  #lbScreen h2 { font-size: 1.5rem; margin-bottom: 1rem; color: #ffd200; }
+  .lb-my-rank { font-size: 1.3rem; margin-bottom: 0.5rem; }
+  .lb-my-score { font-size: 2rem; font-weight: 900; color: #38ef7d; }
+  
+  /* Podium player */
+  #podiumScreen { display: none; text-align: center; }
+  #podiumScreen h2 { font-size: 2rem; font-weight: 900; margin-bottom: 1rem; background: linear-gradient(135deg, #ffd200, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .final-rank { font-size: 4rem; margin-bottom: 0.5rem; }
+  .final-score { font-size: 1.5rem; color: #38ef7d; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- JOIN -->
+<div id="joinScreen">
+  <h1>Live Quiz</h1>
+  <p>Gib deinen Namen ein, um mitzumachen</p>
+  <input type="text" id="nameInput" placeholder="Dein Name" maxlength="20" autocomplete="off">
+  <button class="btn btn-primary" onclick="joinGame()">Mitmachen!</button>
+</div>
+
+<!-- WAITING -->
+<div id="waitScreen">
+  <h2>Willkommen, <span class="welcome-name" id="welcomeName"></span>!</h2>
+  <p class="wait-text pulse">Warte auf den Start des Quiz...</p>
+</div>
+
+<!-- QUESTION -->
+<div id="questionScreen">
+  <div class="q-info" id="pqInfo"></div>
+  <div class="q-timer" id="pqTimer"></div>
+  <div class="q-question" id="pqText"></div>
+  <div class="answer-grid" id="pqOptions"></div>
+</div>
+
+<!-- FEEDBACK -->
+<div id="feedbackScreen">
+  <div class="feedback-icon" id="fbIcon"></div>
+  <div class="feedback-text" id="fbText"></div>
+  <div class="feedback-points" id="fbPoints"></div>
+</div>
+
+<!-- LEADERBOARD -->
+<div id="lbScreen">
+  <h2>Leaderboard</h2>
+  <div class="lb-my-rank" id="lbMyRank"></div>
+  <div class="lb-my-score" id="lbMyScore"></div>
+</div>
+
+<!-- PODIUM -->
+<div id="podiumScreen">
+  <h2>Quiz beendet!</h2>
+  <div class="final-rank" id="finalRank"></div>
+  <div class="feedback-text" id="finalName"></div>
+  <div class="final-score" id="finalScore"></div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+let myName = "";
+let answered = false;
+let timerInterval = null;
+
+function joinGame() {
+  const name = document.getElementById("nameInput").value.trim();
+  if (!name) { alert("Bitte gib deinen Namen ein!"); return; }
+  myName = name;
+  socket.emit("join", name);
+}
+
+socket.on("joined", (data) => {
+  hideAll();
+  document.getElementById("waitScreen").style.display = "block";
+  document.getElementById("welcomeName").textContent = data.name;
+  myName = data.name;
+});
+
+socket.on("question", (data) => {
+  answered = false;
+  hideAll();
+  const screen = document.getElementById("questionScreen");
+  screen.style.display = "block";
+  document.getElementById("pqInfo").textContent = "Frage " + (data.index+1) + " von " + data.total;
+  document.getElementById("pqText").textContent = data.text;
+  
+  const opts = document.getElementById("pqOptions");
+  opts.innerHTML = data.options.map((o, i) => 
+    '<button class="answer-btn opt-'+i+'" onclick="submitAnswer('+i+')">'+o+'</button>'
+  ).join("");
+  
+  let remaining = data.timer;
+  document.getElementById("pqTimer").textContent = remaining;
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    remaining--;
+    document.getElementById("pqTimer").textContent = Math.max(0, remaining);
+    if (remaining <= 0) clearInterval(timerInterval);
+  }, 1000);
+});
+
+function submitAnswer(option) {
+  if (answered) return;
+  answered = true;
+  socket.emit("answer", { option });
+  
+  // Disable all buttons, highlight selected
+  document.querySelectorAll(".answer-btn").forEach((btn, i) => {
+    btn.classList.add("disabled");
+    if (i === option) btn.classList.add("selected");
+  });
+}
+
+socket.on("answerResult", (data) => {
+  clearInterval(timerInterval);
+  hideAll();
+  const screen = document.getElementById("feedbackScreen");
+  screen.style.display = "block";
+  
+  if (data.correct) {
+    document.getElementById("fbIcon").textContent = "🎉";
+    document.getElementById("fbText").textContent = "Richtig!";
+    document.getElementById("fbPoints").textContent = "+" + data.points + " Punkte";
+    document.getElementById("fbPoints").className = "feedback-points";
+  } else {
+    document.getElementById("fbIcon").textContent = "😔";
+    document.getElementById("fbText").textContent = "Leider falsch";
+    document.getElementById("fbPoints").textContent = "0 Punkte";
+    document.getElementById("fbPoints").className = "feedback-points feedback-wrong";
+  }
+});
+
+socket.on("resultsPlayer", () => {
+  // If player didn't answer, show feedback
+  if (!answered) {
+    clearInterval(timerInterval);
+    hideAll();
+    const screen = document.getElementById("feedbackScreen");
+    screen.style.display = "block";
+    document.getElementById("fbIcon").textContent = "⏰";
+    document.getElementById("fbText").textContent = "Zeit abgelaufen!";
+    document.getElementById("fbPoints").textContent = "0 Punkte";
+    document.getElementById("fbPoints").className = "feedback-points feedback-wrong";
+  }
+});
+
+socket.on("leaderboardPlayer", (lb) => {
+  hideAll();
+  const screen = document.getElementById("lbScreen");
+  screen.style.display = "block";
+  
+  const myIndex = lb.findIndex(p => p.name === myName);
+  if (myIndex >= 0) {
+    document.getElementById("lbMyRank").textContent = "Platz " + (myIndex + 1) + " von " + lb.length;
+    document.getElementById("lbMyScore").textContent = lb[myIndex].score + " Punkte";
+  }
+});
+
+socket.on("podium", (lb) => {
+  hideAll();
+  const screen = document.getElementById("podiumScreen");
+  screen.style.display = "block";
+  
+  const emojis = ["🥇", "🥈", "🥉"];
+  const myIndex = lb.findIndex(p => p.name === myName);
+  if (myIndex >= 0) {
+    document.getElementById("finalRank").textContent = myIndex < 3 ? emojis[myIndex] : "#" + (myIndex+1);
+    document.getElementById("finalName").textContent = myName;
+    document.getElementById("finalScore").textContent = lb[myIndex].score + " Punkte";
+  }
+});
+
+socket.on("reset", () => {
+  hideAll();
+  document.getElementById("waitScreen").style.display = "block";
+});
+
+function hideAll() {
+  ["joinScreen","waitScreen","questionScreen","feedbackScreen","lbScreen","podiumScreen"].forEach(id => {
+    document.getElementById(id).style.display = "none";
+  });
+}
+
+// Enter key to join
+document.getElementById("nameInput").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") joinGame();
+});
+</script>
+</body>
+</html>
